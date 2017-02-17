@@ -175,12 +175,43 @@ Database.prototype.valueType = function(value) {
 };
 
 /**
- * Dummy transaction function for public version
- * @param callback
- * @returns {Promise<T>}
+ * Start a transaction
  */
-Database.prototype.begin = function(callback) {
-    throw new Error("Transactions are a Commercial version feature.");
+Database.prototype.begin = function() {
+
+    var self = this;
+    if (!self._isOpen) {
+        throw new Error('SQLITE.BEGIN - Database is not open');
+    }
+
+    // TODO self._db.beginTransaction();
+};
+
+/**
+ * Commits a transaction
+ */
+Database.prototype.commit = function() {
+
+    var self = this;
+    if (!self._db.inTransaction) {
+        throw new Error('SQLITE.COMMIT - No pending transactions');
+    }
+
+    // TODO self._db.setTransactionSuccessful();
+    // TODO self._db.endTransaction();
+};
+
+/**
+ * Commits a transaction
+ */
+Database.prototype.rollback = function() {
+
+    var self = this;
+    if (!self._db.inTransaction) {
+        throw new Error('SQLITE.ROLLBACK - No pending transactions');
+    }
+
+    // TODO self._db.endTransaction();
 };
 
 /***
