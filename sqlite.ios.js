@@ -134,7 +134,7 @@ Database.prototype.version = function(valueOrCallback) {
     } else if (!isNaN(valueOrCallback+0)) {
         return this.execSQL('PRAGMA user_version='+(valueOrCallback+0).toString());
     } else {
-        return this.get('PRAGMA user_version', Database.RESULTSASARRAY);
+        return this.get('PRAGMA user_version');
     }
 };
 
@@ -184,7 +184,14 @@ Database.prototype.begin = function() {
         throw new Error('SQLITE.BEGIN - Database is not open');
     }
 
-    // TODO self._db.beginTransaction();
+    var res = sqlite3_exec(self._db, "BEGIN", null, null, null);
+    if (res) {
+        var errMsg = sqlite3_errmsg(self._db);
+        var message = NSString.stringWithUTF8String(errMsg);
+        throw new Error('SQLITE.BEGIN - Error ' + message);
+    } else {
+        self._inTransaction = true;
+    }
 };
 
 /**
@@ -193,12 +200,21 @@ Database.prototype.begin = function() {
 Database.prototype.commit = function() {
 
     var self = this;
-    if (!self._db.inTransaction) {
-        throw new Error('SQLITE.COMMIT - No pending transactions');
-    }
+    return new Promise( function (resolve, reject) {
+        if (!self._inTransaction) {
+            reject('SQLITE.COMMIT - No pending transactions');
+        }
 
-    // TODO self._db.setTransactionSuccessful();
-    // TODO self._db.endTransaction();
+        var res = sqlite3_exec(self._db, "COMMIT", null, null, null);
+        if (res) {
+            var errMsg = sqlite3_errmsg(self._db);
+            var message = NSString.stringWithUTF8String(errMsg);
+            reject('SQLITE.COMMIT - Error ' + message);
+        } else {
+            self._inTransaction = false;
+            resolve();
+        }
+    });
 };
 
 /**
@@ -207,11 +223,21 @@ Database.prototype.commit = function() {
 Database.prototype.rollback = function() {
 
     var self = this;
-    if (!self._db.inTransaction) {
-        throw new Error('SQLITE.ROLLBACK - No pending transactions');
-    }
+    return new Promise( function (resolve, reject) {
+        if (!self._inTransaction) {
+            reject('SQLITE.ROLLBACK - No pending transactions');
+        }
 
-    // TODO self._db.endTransaction();
+        var res = sqlite3_exec(self._db, "ROLLBACK", null, null, null);
+        if (res) {
+            var errMsg = sqlite3_errmsg(self._db);
+            var message = NSString.stringWithUTF8String(errMsg);
+            reject('SQLITE.ROLLBACK - Error ' + message);
+        } else {
+            self._inTransaction = false;
+            resolve();
+        }
+    });
 };
 
 /***
@@ -290,14 +316,14 @@ Database.prototype.execSQL = function(sql, params, callback) {
             }
             if (params !== undefined) {
                 if (!self._bind(statement, params)) {
-                    callback("SQLITE.ExecSQL Bind Error");
+                    callback("SQLITE.EXECSQL Bind Error: sql=" + sql + ", params =" + params);
                     return;
                 }
             }
             var result = sqlite3_step(statement);
             sqlite3_finalize(statement);
             if (result && result !== 100 && result !== 101) {
-                callback("SQLITE.ExecSQL Failed " + res);
+                callback("SQLITE.EXECSQL Failed " + res);
                 return;
             }
 
@@ -387,12 +413,14 @@ Database.prototype.get = function(sql, params, callback, mode) {
             var cursorStatement = new CursorStatement(statement.value, self._resultType, self._valuesType);
             statement = statement.value;
             if (res) {
-                callback("SQLITE.GET Failed Prepare: " + res);
+                var errMsg = sqlite3_errmsg(self._db);
+                var message = NSString.stringWithUTF8String(errMsg);
+                callback("SQLITE.GET Failed Prepare: " + message);
                 return;
             }
             if (params !== undefined) {
                 if (!self._bind(statement, params)) {
-                    callback("SQLITE.GET Bind Error");
+                    callback("SQLITE.GET Bind Error: sql=" + sql + ", params =" + params);
                     return;
                 }
             }
@@ -465,7 +493,7 @@ Database.prototype.all = function(sql, params, callback) {
             }
             if (params !== undefined) {
                 if (!self._bind(statement, params)) {
-                    callback("SQLITE.ALL Bind Error");
+                    callback("SQLITE.ALL Bind Error: sql=" + sql + ", params =" + params);
                     return;
                 }
             }
@@ -545,8 +573,8 @@ Database.prototype.each = function(sql, params, callback, complete) {
             }
             if (params !== undefined) {
                 if (!self._bind(statement, params)) {
-                    errorCB("SQLITE.EACH Bind Error");
-                    reject("SQLITE.EACH Bind Error");
+                    errorCB("SQLITE.EACH Bind Error: sql=" + sql + ", params =" + params);
+                    reject("SQLITE.EACH Bind Error: sql=" + sql + ", params =" + params);
                     return;
                 }
             }
@@ -587,6 +615,7 @@ Database.prototype.each = function(sql, params, callback, complete) {
  * @private
  */
 Database.prototype._bind = function(statement, params) {
+    var self = this;
     var param, res;
     if (Array.isArray(params)) {
         var count = params.length;
@@ -598,7 +627,9 @@ Database.prototype._bind = function(statement, params) {
                 res = sqlite3_bind_text(statement, i+1, param, -1, null );
             }
             if (res) {
-                console.error("SQLITE.Binding Error ", res);
+                var errMsg = sqlite3_errmsg(self._db);
+                var message = NSString.stringWithUTF8String(errMsg);
+                console.error("SQLITE.Binding Error ", res, message);
                 return false;
             }
         }
@@ -610,7 +641,9 @@ Database.prototype._bind = function(statement, params) {
             res = sqlite3_bind_text(statement, 1, param, -1, null );
         }
         if (res) {
-            console.error("SQLITE.Binding Error ", res);
+            var errMsg = sqlite3_errmsg(self._db);
+            var message = NSString.stringWithUTF8String(errMsg);
+            console.error("SQLITE.Binding Error ", res, message);
             return false;
         }
     }
