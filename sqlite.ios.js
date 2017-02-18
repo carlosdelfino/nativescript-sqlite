@@ -311,7 +311,9 @@ Database.prototype.execSQL = function(sql, params, callback) {
             res = sqlite3_prepare_v2(self._db, sql, -1, statement, null);
             statement = statement.value;
             if (res) {
-                callback("SQLITE.ExecSQL Failed Prepare: " + res);
+                var errMsg = sqlite3_errmsg(self._db);
+                var message = NSString.stringWithUTF8String(errMsg);
+                callback("SQLITE.EXECSQL Failed Prepare: " + message);
                 return;
             }
             if (params !== undefined) {
@@ -323,7 +325,9 @@ Database.prototype.execSQL = function(sql, params, callback) {
             var result = sqlite3_step(statement);
             sqlite3_finalize(statement);
             if (result && result !== 100 && result !== 101) {
-                callback("SQLITE.EXECSQL Failed " + res);
+                var errMsg = sqlite3_errmsg(self._db);
+                var message = NSString.stringWithUTF8String(errMsg);
+                callback("SQLITE.EXECSQL Failed Prepare: " + message);
                 return;
             }
 
