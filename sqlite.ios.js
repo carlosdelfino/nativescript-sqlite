@@ -434,7 +434,9 @@ Database.prototype.get = function(sql, params, callback, mode) {
             }
             sqlite3_finalize(statement);
             if (result && result !== 100 && result !== 101) {
-                callback("SQLITE.GET - Step Error" + result);
+                var errMsg = sqlite3_errmsg(self._db);
+                var message = NSString.stringWithUTF8String(errMsg);
+                callback("SQLITE.GET - Step Error: " + message);
                 return;
             }
         } catch (err) {
@@ -492,7 +494,9 @@ Database.prototype.all = function(sql, params, callback) {
             var cursorStatement = new CursorStatement(statement.value, self._resultType, self._valuesType);
             statement = statement.value;
             if (res) {
-                callback("SQLITE.ALL - Prepare Error " + res);
+                var errMsg = sqlite3_errmsg(self._db);
+                var message = NSString.stringWithUTF8String(errMsg);
+                callback("SQLITE.ALL Prepare Error: " + message);
                 return;
             }
             if (params !== undefined) {
@@ -511,7 +515,9 @@ Database.prototype.all = function(sql, params, callback) {
                     }
                 } else if (result && result !== 101) {
                     sqlite3_finalize(statement);
-                    callback("SQLITE.ALL - Database Error" + result);
+                    var errMsg = sqlite3_errmsg(self._db);
+                    var message = NSString.stringWithUTF8String(errMsg);
+                    callback("SQLITE.ALL - Database Error: " + message);
                     return;
                 }
             } while (result === 100);
@@ -571,8 +577,10 @@ Database.prototype.each = function(sql, params, callback, complete) {
             var cursorStatement = new CursorStatement(statement.value, self._resultType, self._valuesType);
             statement = statement.value;
             if (res) {
-                errorCB("SQLITE.EACH Error in Prepare" + res);
-                reject("SQLITE.EACH Error in Prepare" + res);
+                var errMsg = sqlite3_errmsg(self._db);
+                var message = NSString.stringWithUTF8String(errMsg);
+                errorCB("SQLITE.EACH Error in Prepare: " + message);
+                reject("SQLITE.EACH Error in Prepare: " + message);
                 return;
             }
             if (params !== undefined) {
@@ -593,8 +601,10 @@ Database.prototype.each = function(sql, params, callback, complete) {
                     }
                 } else if (result && result !== 101) {
                     sqlite3_finalize(statement);
-                    errorCB("SQLITE.EACH - Database Error " + result);
-                    reject("SQLITE.EACH - Database Error " + result);
+                    var errMsg = sqlite3_errmsg(self._db);
+                    var message = NSString.stringWithUTF8String(errMsg);
+                    errorCB("SQLITE.EACH - Database Error: " + message);
+                    reject("SQLITE.EACH - Database Error: " + message);
                     return;
                 }
             } while (result === 100);
