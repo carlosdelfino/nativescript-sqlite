@@ -255,7 +255,6 @@ Database.prototype.close = function(callback) {
             }
             reject('SQLITE.CLOSE - Database is already closed');
             return;
-
         }
 
         sqlite3_close(self._db);
@@ -313,7 +312,7 @@ Database.prototype.execSQL = function(sql, params, callback) {
             if (res) {
                 var errMsg = sqlite3_errmsg(self._db);
                 var message = NSString.stringWithUTF8String(errMsg);
-                callback("SQLITE.EXECSQL Failed Prepare: " + message);
+                callback("SQLITE.EXECSQL Failed Prepare: " + message + ". sql=" + sql + ", params =" + params);
                 return;
             }
             if (params !== undefined) {
@@ -327,7 +326,7 @@ Database.prototype.execSQL = function(sql, params, callback) {
             if (result && result !== 100 && result !== 101) {
                 var errMsg = sqlite3_errmsg(self._db);
                 var message = NSString.stringWithUTF8String(errMsg);
-                callback("SQLITE.EXECSQL Failed Prepare: " + message);
+                callback("SQLITE.EXECSQL Failed: " + message + ". sql=" + sql + ", params =" + params);
                 return;
             }
 
@@ -335,7 +334,6 @@ Database.prototype.execSQL = function(sql, params, callback) {
             callback(Err, null);
             return;
         }
-
 
         switch (flags) {
             case 0:
@@ -395,7 +393,6 @@ Database.prototype.get = function(sql, params, callback, mode) {
         params = undefined;
     }
 
-
     var self = this;
     return new Promise( function (resolve, reject) {
         var hasCallback = true;
@@ -419,7 +416,7 @@ Database.prototype.get = function(sql, params, callback, mode) {
             if (res) {
                 var errMsg = sqlite3_errmsg(self._db);
                 var message = NSString.stringWithUTF8String(errMsg);
-                callback("SQLITE.GET Failed Prepare: " + message);
+                callback("SQLITE.GET Failed Prepare: " + message + ". sql=" + sql + ", params =" + params);
                 return;
             }
             if (params !== undefined) {
@@ -436,7 +433,7 @@ Database.prototype.get = function(sql, params, callback, mode) {
             if (result && result !== 100 && result !== 101) {
                 var errMsg = sqlite3_errmsg(self._db);
                 var message = NSString.stringWithUTF8String(errMsg);
-                callback("SQLITE.GET - Step Error: " + message);
+                callback("SQLITE.GET - Step Error: " + message + ". sql=" + sql + ", params =" + params);
                 return;
             }
         } catch (err) {
@@ -496,7 +493,7 @@ Database.prototype.all = function(sql, params, callback) {
             if (res) {
                 var errMsg = sqlite3_errmsg(self._db);
                 var message = NSString.stringWithUTF8String(errMsg);
-                callback("SQLITE.ALL Prepare Error: " + message);
+                callback("SQLITE.ALL Prepare Error: " + message + ". sql=" + sql + ", params =" + params);
                 return;
             }
             if (params !== undefined) {
@@ -517,7 +514,7 @@ Database.prototype.all = function(sql, params, callback) {
                     sqlite3_finalize(statement);
                     var errMsg = sqlite3_errmsg(self._db);
                     var message = NSString.stringWithUTF8String(errMsg);
-                    callback("SQLITE.ALL - Database Error: " + message);
+                    callback("SQLITE.ALL - Database Error: " + message + ". sql=" + sql + ", params =" + params);
                     return;
                 }
             } while (result === 100);
@@ -579,8 +576,8 @@ Database.prototype.each = function(sql, params, callback, complete) {
             if (res) {
                 var errMsg = sqlite3_errmsg(self._db);
                 var message = NSString.stringWithUTF8String(errMsg);
-                errorCB("SQLITE.EACH Error in Prepare: " + message);
-                reject("SQLITE.EACH Error in Prepare: " + message);
+                errorCB("SQLITE.EACH Error in Prepare: " + message + ". sql=" + sql + ", params =" + params);
+                reject("SQLITE.EACH Error in Prepare: " + message + ". sql=" + sql + ", params =" + params);
                 return;
             }
             if (params !== undefined) {
@@ -603,8 +600,8 @@ Database.prototype.each = function(sql, params, callback, complete) {
                     sqlite3_finalize(statement);
                     var errMsg = sqlite3_errmsg(self._db);
                     var message = NSString.stringWithUTF8String(errMsg);
-                    errorCB("SQLITE.EACH - Database Error: " + message);
-                    reject("SQLITE.EACH - Database Error: " + message);
+                    errorCB("SQLITE.EACH - Database Error: " + message + ". sql=" + sql + ", params =" + params);
+                    reject("SQLITE.EACH - Database Error: " + message + ". sql=" + sql + ", params =" + params);
                     return;
                 }
             } while (result === 100);
