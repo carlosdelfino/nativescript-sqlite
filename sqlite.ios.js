@@ -637,7 +637,7 @@ Database.prototype._bind = function(statement, params) {
       } else {
         if (typeof params[i] == 'number') {
           if (Number.isInteger(params[i])) {
-            res = sqlite3_bind_int(statement, i + 1, params[i]);
+            res = sqlite3_bind_int64(statement, i + 1, params[i]);
           } else {
             res = sqlite3_bind_double(statement, i + 1, params[i]);
           }
@@ -673,7 +673,7 @@ Database.prototype._getNativeResult = function(statement, column) {
   var resultType = sqlite3_column_type(statement, column);
   switch (resultType) {
     case 1: // Int
-      return sqlite3_column_int(statement, column);
+      return sqlite3_column_int64(statement, column);
     case 2: // Float
       return sqlite3_column_double(statement, column);
     case 3: // Text
