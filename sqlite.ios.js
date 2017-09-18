@@ -1,11 +1,11 @@
 /************************************************************************************
- * (c) 2015, 2016 Master Technology
+ * (c) 2015-2017 Master Technology
  * Licensed under the MIT license or contact me for a support, changes, enhancements,
  * and/or if you require a commercial licensing
  *
  * Any questions please feel free to email me or put a issue up on github
  * Nathan@master-technology.com                           http://nativescript.tools
- * Version 0.1.3 - iOS
+ * Version 0.1.6 - iOS
  ***********************************************************************************/
 
 "use strict";
@@ -89,12 +89,16 @@ function Database(dbname, options, callback) {
   return new Promise(function(resolve, reject) {
     var error;
     try {
+      var flags = 0;
+      if (typeof options.iosFlags !== 'undefined') {
+        flags = options.iosFlags;
+      }
       self._db = new interop.Reference();
       // SQLITE_OPEN_FULLMUTEX = 65536, SQLITE_OPEN_CREATE = 4, SQLITE_OPEN_READWRITE = 2 --- 4 | 2 | 65536 = 65542
       if (options && options.readOnly) {
-        error = sqlite3_open_v2(dbname, self._db, 65536, null);
+        error = sqlite3_open_v2(dbname, self._db, 65536 | flags, null);
       } else {
-        error = sqlite3_open_v2(dbname, self._db, 65542, null);
+        error = sqlite3_open_v2(dbname, self._db, 65542 | flags, null);
       }
       self._db = self._db.value;
     } catch (err) {
@@ -133,7 +137,7 @@ Database.prototype.version = function(valueOrCallback) {
   } else if (!isNaN(valueOrCallback + 0)) {
     return this.execSQL('PRAGMA user_version=' + (valueOrCallback + 0).toString());
   } else {
-    return this.get('PRAGMA user_version');
+    return this.get('PRAGMA user_version', undefined, undefined, Database.RESULTSASARRAY);
   }
 };
 
@@ -680,7 +684,7 @@ Database.prototype._getNativeResult = function(statement, column) {
       //noinspection JSUnresolvedFunction
       return NSString.stringWithUTF8String(sqlite3_column_text(statement, column)).toString();
     case 4: // Blob
-      return null; // TODO: We don't currently support Blobs on iOS
+      return NSData.dataWithBytesLength(sqlite3_column_blob(statement, column), sqlite3_column_bytes(statement, column));
     case 5: // Null
       return null;
     default:
@@ -702,7 +706,7 @@ Database.prototype._getStringResult = function(statement, column) {
       //noinspection JSUnresolvedFunction
       return NSString.stringWithUTF8String(sqlite3_column_text(statement, column)).toString();
     case 4: // Blob
-      return null; // TODO: We don't currently support Blobs on iOS
+      return NSData.dataWithBytesLength(sqlite3_column_blob(statement, column), sqlite3_column_bytes(statement, column));
     case 5: // Null
       return null;
     default:
