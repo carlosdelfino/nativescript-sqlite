@@ -43,7 +43,7 @@ function DBGetRowArrayNative(cursor) {
 
             case 2: // Float
                 //noinspection JSUnresolvedFunction
-                results.push(cursor.getFloat(i));
+                results.push(cursor.getDouble(i));
                 break;
 
             case 3: // String
@@ -129,7 +129,7 @@ function DBGetRowObjectNative(cursor) {
 
             case 2: // Float
                 //noinspection JSUnresolvedFunction
-                results[name] = cursor.getFloat(i);
+                results[name] = cursor.getDouble(i);
                 break;
 
             case 3: // String
