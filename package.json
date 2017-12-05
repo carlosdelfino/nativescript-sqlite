@@ -34,6 +34,13 @@
     "name": "Nathanael Anderson",
     "email": "nathan@master-technology.com"
   },
+  "constributors":[
+    {
+      "name": "Carlos Delfino",
+      "email": "consultoria@carlosdelfino.eti.br",
+      "url": "http://carlosdelfino.eti.br"
+    }
+  ],
   "license": {
     "type": "MIT",
     "url": "https://github.com/nathanaela/nativescript-sqlite/blob/master/LICENSE"
