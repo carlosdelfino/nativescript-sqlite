@@ -8,13 +8,13 @@
       "android": "1.4.0",
       "ios": "1.4.0"
     },
-	"plugin": {
-	  "nan": "true",
-	  "pan": "true",
-	  "core3": "true",
-	  "vue": "true",
-	  "category": "Database"
-	}
+    "plugin": {
+      "nan": "true",
+      "pan": "true",
+      "core3": "true",
+      "vue": "true",
+      "category": "Database"
+    }
   },
   "repository": {
     "type": "git",
@@ -29,16 +29,18 @@
     "iOS",
     "Android",
     "JavaScript",
-	"encryption"
+    "encryption"
   ],
   "author": {
     "name": "Nathanael Anderson",
     "email": "nathan@master-technology.com"
   },
-  "license": {
-    "type": "MIT",
-    "url": "https://github.com/nathanaela/nativescript-sqlite/blob/master/LICENSE"
-  },
+  "contributors": [{
+    "name": "Carlos Delfino",
+    "email": "consultoria@carlosdelfino.eti.br",
+    "url": "http://carlosdelfino.eti.br"
+  }],
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/nathanaela/nativescript-sqlite/issues"
   },
