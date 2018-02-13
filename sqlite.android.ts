@@ -12,7 +12,7 @@
 
 import * as appModule from "tns-core-modules/application"
 import * as platform from "tns-core-modules/platform";
-import { SQLiteBase } from "./sqlite-common";
+import { SQLite as SQLiteBase } from "./sqlite-common";
 
 /*jshint undef: true */
 /*global java, android, Promise */

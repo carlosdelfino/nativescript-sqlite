@@ -1,7 +1,10 @@
 export type DbName = (string | File);
-export type Callback = (err:string, data:any) => any;
+export type Callback = (err: string, data: any) => any;
 
-export default class Database extends Promise<Database>{
+import { IDatabase, SQLite } from "./sqlite-common";
+export { IDatabase, SQLite };
+
+export class Database extends Promise<IDatabase> implements IDatabase{
 
     /**
      * 
@@ -20,40 +23,40 @@ export default class Database extends Promise<Database>{
      * @param val to set or undefined for get version
      * @returns Promise<any>
      */
-    public version(ver?: number|string): Promise<any> ;
+    public version(ver?: number | string): Promise<any>;
 
     /***
      * Is the database currently open
      * @returns {boolean} - true if the db is open
      */
-    public isOpen():boolean;
+    public isOpen(): boolean;
 
     /***
      * Gets/Sets whether you get Arrays or Objects for the row values
      * @param value - Database.RESULTSASARRAY or Database.RESULTSASOBJECT
      * @returns {number} - Database.RESULTSASARRAY or Database.RESULTSASOBJECT
      */
-    public resultType(value:any):number;
+    public resultType(value: any): number;
 
     /***
      * Gets/Sets whether you get Native or Strings for the row values
      * @param value - Database.VALUESARENATIVE or Database.VALUESARESTRINGS
      * @returns {number} - Database.VALUESARENATIVE or Database.VALUESARESTRINGS
      */
-    public valueType(value:any):number;
+    public valueType(value: any): number;
 
     /*
      * Dummy transaction function for public version
      * @param callback
      * @returns {Promise<T>}
      */
-    public begin():Promise<any>;
+    public begin(): Promise<any>;
 
     /***
      * Closes this database, any queries after this will fail with an error
      * @param callback
      */
-    public close():Promise<any>;
+    public close(): Promise<any>;
 
     /***
      * Exec SQL
@@ -62,7 +65,7 @@ export default class Database extends Promise<Database>{
      * @param callback - (err, result) - can be last_row_id for insert, and rows affected for update/delete
      * @returns Promise
      */
-    public execSQL(sql:string, params?: any);
+    public execSQL(sql: string, params?: any);
 
     /***
      * Get the first record result set
