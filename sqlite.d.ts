@@ -1,22 +1,20 @@
 export type DbName = (string | File);
 export type Callback = (err: string, data: any) => any;
 
-import { IDatabase, SQLite } from "./sqlite-common";
-export { IDatabase, SQLite };
 
-export class Database extends Promise<IDatabase> implements IDatabase{
-
+export class SQLite {
     /**
      * 
      * @param dbname 
      */
-    public constructor(dbname: DbName);
+    public constructor(dbname: DbName, options: {});
 
-    /***
-     * Constant that this structure is a sqlite structure
-     * @type {boolean}
-     */
-    private _isSqlite: boolean;
+    public then<TResult1 = SQLite, TResult2 = never>(): Promise<TResult1 | TResult2>;
+    public then<TResult1 = SQLite, TResult2 = never>(onfulfilled?: ((value: SQLite) => TResult1 | PromiseLike<TResult1>) | undefined | null): Promise<TResult1 | TResult2>;
+    public then<TResult1 = SQLite, TResult2 = never>(onfulfilled: ((value: SQLite) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
+
+    public catch<TResult = never>(): Promise<SQLite | TResult>
+    public catch<TResult = never>(onrejected: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<SQLite | TResult>
 
     /***
      * This gets or sets the database version
@@ -65,7 +63,7 @@ export class Database extends Promise<IDatabase> implements IDatabase{
      * @param callback - (err, result) - can be last_row_id for insert, and rows affected for update/delete
      * @returns Promise
      */
-    public execSQL(sql: string, params?: any);
+    public execSQL(sql: string, ...params: any[]);
 
     /***
      * Get the first record result set
@@ -75,8 +73,6 @@ export class Database extends Promise<IDatabase> implements IDatabase{
      * @returns Promise
      */
     public get(sql: string, params?: any, mode?: any): Promise<any>;
-
-    private _getResultEngine(mode);
 
     /***
      * This returns the entire result set in a array of rows
@@ -95,14 +91,6 @@ export class Database extends Promise<IDatabase> implements IDatabase{
      * @returns Promise
      */
     public each(sql: string, params?: (any | Callback), callback?: Callback, complete?: Callback);
-
-    /***
-     * Converts a Mixed Array to a String Array
-     * @param params
-     * @returns {Array}
-     * @private
-     */
-    private _toStringArray(params: any): string[];
 
     /***
      * Is this a SQLite object

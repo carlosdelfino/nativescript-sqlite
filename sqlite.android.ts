@@ -224,81 +224,49 @@ function setResultValueTypeEngine(resultType, valueType) {
  * @returns {Promise} object
  * @constructor
  */
-export class Database extends SQLiteBase {
+export class SQLite extends SQLiteBase {
 
     private _db: android.database.sqlite.SQLiteDatabase;
 
 
-    constructor(dbname: string, options: any) {
-        super((resolve, reject) => {
+    public constructor(dbname: string, options: any = {}) {
+        console.log("construtor do sqllite.android");
+        super(dbname, options);
+        console.log("termina construtor do sqllite.android");
+    }
 
+    protected _initDataBase(): any {
+        // Check to see if it has a path, or if it is a relative dbname
+        // dbname = "" - Temporary Database
+        // dbname = ":memory:" = memory database
+        if (this.dbname !== "" && this.dbname !== ":memory:") {
+            //var pkgName = appModule.android.context.getPackageName();
+            //noinspection JSUnresolvedFunction
+            this.dbname = SQLite._getContext().getDatabasePath(this.dbname).getAbsolutePath();
+            var path = this.dbname.substr(0, this.dbname.lastIndexOf('/') + 1);
 
+            // Create "databases" folder if it is missing.  This causes issues on Emulators if it is missing
+            // So we create it if it is missing
 
-            // Check to see if it has a path, or if it is a relative dbname
-            // dbname = "" - Temporary Database
-            // dbname = ":memory:" = memory database
-            if (dbname !== "" && dbname !== ":memory:") {
-                //var pkgName = appModule.android.context.getPackageName();
+            var javaFile = new java.io.File(path);
+            if (!javaFile.exists()) {
+                //noinspection JSUnresolvedFunction 
+                javaFile.mkdirs();
                 //noinspection JSUnresolvedFunction
-                dbname = _getContext().getDatabasePath(dbname).getAbsolutePath();
-                var path = dbname.substr(0, dbname.lastIndexOf('/') + 1);
-
-                // Create "databases" folder if it is missing.  This causes issues on Emulators if it is missing
-                // So we create it if it is missing
-
-                try {
-                    var javaFile = new java.io.File(path);
-                    if (!javaFile.exists()) {
-                        //noinspection JSUnresolvedFunction
-                        javaFile.mkdirs();
-                        //noinspection JSUnresolvedFunction
-                        javaFile.setReadable(true);
-                        //noinspection JSUnresolvedFunction
-                        javaFile.setWritable(true);
-                    }
-
-                    var flags = 0;
-                    if (typeof options.androidFlags !== 'undefined') {
-                        flags = options.androidFlags;
-                    }
-                    this._db = this._openDatabase(dbname, flags, options, _getContext());
-                } catch (err) {
-                    console.error("SQLITE.CONSTRUCTOR -  Open DB Error", err);
-
-                    reject(err);
-                    return;
-                }
-
-                this._isOpen = true;
-                resolve(this);
-
-                var doneCnt = _DatabasePluginInits.length, doneHandled = 0;
-                var done = function (err) {
-                    if (err) {
-                        doneHandled = doneCnt;  // We don't want any more triggers after this
-                        reject(err);
-                        return;
-                    }
-                    doneHandled++;
-                    if (doneHandled === doneCnt) {
-                        resolve(this);
-                    }
-                };
-
-                if (doneCnt) {
-                    try {
-                        for (var i = 0; i < doneCnt; i++) {
-                            _DatabasePluginInits[i].call(self, options, done);
-                        }
-                    }
-                    catch (err) {
-                        done(err);
-                    }
-                } else {
-                    resolve(this);
-                }
+                javaFile.setReadable(true);
+                //noinspection JSUnresolvedFunction
+                javaFile.setWritable(true);
             }
-        });
+
+            var flags = 0;
+            if (typeof this.options.androidFlags !== 'undefined') {
+                flags = this.options.androidFlags;
+            }
+
+            this._db = this._openDatabase(this.dbname, flags, this.options, SQLite._getContext());
+
+            this._isOpen = true;
+        }
     }
 
     /**
@@ -370,12 +338,12 @@ export class Database extends SQLiteBase {
      * @returns {number} - Database.VALUESARENATIVE or Database.VALUESARESTRINGS
      */
     public valueType(value) {
-        if (value === Database.VALUESARENATIVE) {
-            this._valuesType = Database.VALUESARENATIVE;
+        if (value === SQLite.VALUESARENATIVE) {
+            this._valuesType = SQLite.VALUESARENATIVE;
             setResultValueTypeEngine(this._resultType, this._valuesType);
 
-        } else if (value === Database.VALUESARESTRINGS) {
-            this._valuesType = Database.VALUESARESTRINGS;
+        } else if (value === SQLite.VALUESARESTRINGS) {
+            this._valuesType = SQLite.VALUESARESTRINGS;
             setResultValueTypeEngine(this._resultType, this._valuesType);
         }
         return this._resultType;
@@ -485,7 +453,7 @@ export class Database extends SQLiteBase {
                     resolve(null);
                     break;
                 case 1:
-                    this.get('select last_insert_rowid()', Database.RESULTSASARRAY | Database.VALUESARENATIVE).
+                    this.get('select last_insert_rowid()', SQLite.RESULTSASARRAY | SQLite.VALUESARENATIVE).
                         then((data) => {
                             resolve(data && data[0]);
                         }).
@@ -494,7 +462,7 @@ export class Database extends SQLiteBase {
                         });
                     break;
                 case 2:
-                    this.get('select changes()', Database.RESULTSASARRAY | Database.VALUESARENATIVE).
+                    this.get('select changes()', SQLite.RESULTSASARRAY | SQLite.VALUESARENATIVE).
                         then((data) => {
                             resolve(data && data[0]);
                         }).
@@ -567,23 +535,23 @@ export class Database extends SQLiteBase {
     private _getResultEngine(mode) {
         if (mode == null || mode === 0) return DBGetRowResults;
 
-        var resultType = (mode & Database.RESULTSASARRAY | Database.RESULTSASOBJECT);
+        var resultType = (mode & SQLite.RESULTSASARRAY | SQLite.RESULTSASOBJECT);
         if (resultType === 0) {
             resultType = this._resultType;
         }
-        var valueType = (mode & Database.VALUESARENATIVE | Database.VALUESARESTRINGS);
+        var valueType = (mode & SQLite.VALUESARENATIVE | SQLite.VALUESARESTRINGS);
         if (valueType === 0) {
             valueType = this._valuesType;
         }
 
-        if (resultType === Database.RESULTSASOBJECT) {
-            if (valueType === Database.VALUESARESTRINGS) {
+        if (resultType === SQLite.RESULTSASOBJECT) {
+            if (valueType === SQLite.VALUESARESTRINGS) {
                 return DBGetRowObjectString;
             } else {
                 return DBGetRowObjectNative;
             }
         } else {
-            if (valueType === Database.VALUESARESTRINGS) {
+            if (valueType === SQLite.VALUESARESTRINGS) {
                 return DBGetRowArrayString;
             } else {
                 return DBGetRowArrayNative;
@@ -599,8 +567,7 @@ export class Database extends SQLiteBase {
 
      * @returns Promise
      */
-    public all(sql: string, params?: any) {
-
+    public all(sql: string, ...params: any[]) {
 
         return new Promise((resolve, reject) => {
 
@@ -737,7 +704,7 @@ export class Database extends SQLiteBase {
      */
     public static exists(name): boolean {
         //noinspection JSUnresolvedFunction
-        var dbName = _getContext().getDatabasePath(name).getAbsolutePath();
+        var dbName = SQLite._getContext().getDatabasePath(name).getAbsolutePath();
         var dbFile = new java.io.File(dbName);
         return dbFile.exists();
     };
@@ -748,7 +715,7 @@ export class Database extends SQLiteBase {
      */
     public static deleteDatabase(name) {
         //noinspection JSUnresolvedFunction
-        var dbName = _getContext().getDatabasePath(name).getAbsolutePath();
+        var dbName = SQLite._getContext().getDatabasePath(name).getAbsolutePath();
         var dbFile = new java.io.File(dbName);
         if (dbFile.exists()) {
             dbFile.delete();
@@ -767,14 +734,14 @@ export class Database extends SQLiteBase {
 
         //Open your local db as the input stream
         //noinspection JSUnresolvedFunction
-        var myInput = _getContext().getAssets().open("app/" + name);
+        var myInput = SQLite._getContext().getAssets().open("app/" + name);
 
         if (name.indexOf('/')) {
             name = name.substring(name.indexOf('/') + 1);
         }
 
         //noinspection JSUnresolvedFunction
-        var dbname = _getContext().getDatabasePath(name).getAbsolutePath();
+        var dbname = SQLite._getContext().getDatabasePath(name).getAbsolutePath();
         var path = dbname.substr(0, dbname.lastIndexOf('/') + 1);
 
         // Create "databases" folder if it is missing.  This causes issues on Emulators if it is missing
@@ -823,21 +790,21 @@ export class Database extends SQLiteBase {
     };
 
 
-
-}
-
-/**
-     * gets the current application context
-     * @returns {*}
-     * @private
-     */
-function _getContext(): any {
-    if (appModule.android.context) {
-        return (appModule.android.context);
-    }
-    var ctx = java.lang.Class.forName("android.app.AppGlobals").getMethod("getInitialApplication", null).invoke(null, null);
-    if (ctx)
+    /**
+         * gets the current application context
+         * @returns {*}
+         * @private
+         */
+    private static _getContext(): any {
+        if (appModule.android.context) {
+            return (appModule.android.context);
+        }
+        var ctx = java.lang.Class.forName("android.app.AppGlobals").getMethod("getInitialApplication", null).invoke(null, null);
+        if (ctx)
+            return ctx;
+        ctx = java.lang.Class.forName("android.app.ActivityThread").getMethod("currentApplication", null).invoke(null, null);
         return ctx;
-    ctx = java.lang.Class.forName("android.app.ActivityThread").getMethod("currentApplication", null).invoke(null, null);
-    return ctx;
+    }
+
 }
+
